@@ -1,3 +1,63 @@
+server:
+  port: 8888
+
 spring:
   application:
     name: config-server
+  profiles:
+    active: dev
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${CONFIG_GIT_URI:https://github.com/your-org/config-repo.git}
+          clone-on-start: true
+          # Search for configuration files in subdirectories of the repository
+          search-paths: '{application}'
+          # For private repositories, use environment variables for credentials
+          username: ${CONFIG_GIT_USERNAME:admin}
+          password: ${CONFIG_GIT_PASSWORD:password}
+          default-label: main
+
+# Management endpoints configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,bus-refresh,refresh
+  endpoint:
+    health:
+      show-details: always
+
+# Security configuration (Basic Auth)
+spring.security.user:
+  name: ${CONFIG_SERVER_USER:root}
+  password: ${CONFIG_SERVER_PASSWORD:s3cr3t}
+
+---
+# Dev Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  cloud:
+    config:
+      server:
+        git:
+          # Use a local or sample repository for development
+          uri: ${CONFIG_GIT_URI:https://github.com/spring-cloud-samples/config-repo}
+          clone-on-start: false
+
+---
+# Prod Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+  cloud:
+    config:
+      server:
+        git:
+          # In production, strict validation and clone-on-start are recommended
+          clone-on-start: true
+          force-pull: true
